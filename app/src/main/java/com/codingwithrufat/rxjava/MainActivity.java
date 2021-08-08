@@ -6,6 +6,9 @@ import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.codingwithrufat.rxjava.model.Task;
+import com.codingwithrufat.rxjava.repository.DataSource;
+
+import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
@@ -30,85 +33,41 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final Task task = new Task("Learn android", true, 3);
-        // final List<Task> tasks = DataSource.getTasksList();
 
-        /**
-         * this one is create method
-         */
-        /*
-        .create(new ObservableOnSubscribe<Task>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<Task> emitter) throws Throwable {
-                for (Task task: tasks){
-                    if (!emitter.isDisposed()){
-                        emitter.onNext(task);
-                    }
-                }
+        final List<Task> tasks = DataSource.getTasksList();
 
-                if (!emitter.isDisposed()){
-                    emitter.onComplete();
-                }
-
-            }
-        })
-         */
-
-        /**
-         * just operator is limited operator(max -> 10 objects)
-         */
-        /*
-        .just(task)
-         */
-
-        // range operator
-
-        /*
         Observable<Task> taskObservable = Observable
-                .range(1, 10)
-                .subscribeOn(Schedulers.io())
-                .map(new Function<Integer, Task>() {
+                .fromIterable(tasks)
+                .subscribeOn(Schedulers.io());
+
+        taskObservable
+                .buffer(2) // buffer operator create new list which contains 2 objects
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<Task>>() {
                     @Override
-                    public Task apply(Integer integer) throws Throwable {
-                        return new Task("this is task " + integer, false, integer);
+                    public void onSubscribe(@NonNull Disposable d) {
+
                     }
-                })
-                .takeWhile(new Predicate<Task>() {
+
                     @Override
-                    public boolean test(Task task) throws Throwable {
-                        return task.getPriority() < 10;
+                    public void onNext(@NonNull List<Task> tasks) {
+                        Log.d(TAG, "onNext: " + "-----------------------");
+                        for (Task task: tasks){
+                            Log.d(TAG, "onNext: " + task.getDescription());
+                        }
                     }
-                })
-                .observeOn(AndroidSchedulers.mainThread());
-         */
 
-        Observable<Integer> taskObservable = Observable
-                .range(1, 10)
-                .subscribeOn(Schedulers.io())
-                .repeat(2)
-                .observeOn(AndroidSchedulers.mainThread());
+                    @Override
+                    public void onError(@NonNull Throwable e) {
 
-        taskObservable.subscribe(new Observer<Integer>() {
-            @Override
-            public void onSubscribe(@NonNull Disposable d) {
-                compositeDisposable.add(d);
-            }
+                    }
 
-            @Override
-            public void onNext(@NonNull Integer integer) {
-                Log.d(TAG, "onNext: " + integer);
-            }
+                    @Override
+                    public void onComplete() {
 
-            @Override
-            public void onError(@NonNull Throwable e) {
+                    }
+                });
 
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        });
 
 
     }
