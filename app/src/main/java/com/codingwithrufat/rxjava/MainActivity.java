@@ -1,8 +1,6 @@
 package com.codingwithrufat.rxjava;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -103,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
                 .flatMap(new Function<List<Posts>, ObservableSource<Posts>>() {
                     @Override
                     public ObservableSource<Posts> apply(List<Posts> posts) throws Throwable {
-                        Log.d(TAG, "apply: " + posts.get(0).getTitle());
                         recyclerViewAdapter.setPosts(posts);
                         return Observable.fromIterable(posts)
                                 .subscribeOn(Schedulers.io());
@@ -119,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public Posts apply(List<Comments> comments) throws Throwable {
 
-                        int delay = ((new Random()).nextInt(5) + 1) * 1000; // sleep thread for x ms
+                        int delay = ((new Random()).nextInt(3) + 1) * 1000; // sleep thread for random ms
                         Thread.sleep(delay);
 
                         posts.setComments(comments);
