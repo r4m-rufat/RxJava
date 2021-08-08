@@ -1,88 +1,115 @@
 package com.codingwithrufat.rxjava;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.codingwithrufat.rxjava.model.Comments;
-import com.codingwithrufat.rxjava.model.Posts;
-import com.codingwithrufat.rxjava.network.ApiClient;
-import com.codingwithrufat.rxjava.network.IApi;
-
-import java.util.List;
-import java.util.Random;
+import com.codingwithrufat.rxjava.model.Task;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    // ui
-    private RecyclerView recyclerView;
-    private RecyclerViewAdapter recyclerViewAdapter;
-
     // variables
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
-    private IApi iApi;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        iApi = ApiClient.getRetrofit().create(IApi.class);
 
-        recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        recyclerViewAdapter = new RecyclerViewAdapter();
-        recyclerView.setAdapter(recyclerViewAdapter);
+        final Task task = new Task("Learn android", true, 3);
+        // final List<Task> tasks = DataSource.getTasksList();
 
-        getData();
+        /**
+         * this one is create method
+         */
+        /*
+        .create(new ObservableOnSubscribe<Task>() {
+            @Override
+            public void subscribe(@NonNull ObservableEmitter<Task> emitter) throws Throwable {
+                for (Task task: tasks){
+                    if (!emitter.isDisposed()){
+                        emitter.onNext(task);
+                    }
+                }
 
-    }
+                if (!emitter.isDisposed()){
+                    emitter.onComplete();
+                }
 
-    private void getData() {
+            }
+        })
+         */
 
-        getObservablePosts()
+        /**
+         * just operator is limited operator(max -> 10 objects)
+         */
+        /*
+        .just(task)
+         */
+
+        // range operator
+
+        /*
+        Observable<Task> taskObservable = Observable
+                .range(1, 10)
                 .subscribeOn(Schedulers.io())
-                .flatMap(new Function<Posts, ObservableSource<Posts>>() {
+                .map(new Function<Integer, Task>() {
                     @Override
-                    public ObservableSource<Posts> apply(Posts posts) throws Throwable {
-                        return getObservableComments(posts);
+                    public Task apply(Integer integer) throws Throwable {
+                        return new Task("this is task " + integer, false, integer);
                     }
-                }).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Posts>() {
+                })
+                .takeWhile(new Predicate<Task>() {
                     @Override
-                    public void onSubscribe(@NonNull Disposable d) {
-                        compositeDisposable.add(d);
+                    public boolean test(Task task) throws Throwable {
+                        return task.getPriority() < 10;
                     }
+                })
+                .observeOn(AndroidSchedulers.mainThread());
+         */
 
-                    @Override
-                    public void onNext(@NonNull Posts posts) {
-                        recyclerViewAdapter.updatePost(posts);
-                    }
+        Observable<Integer> taskObservable = Observable
+                .range(1, 10)
+                .subscribeOn(Schedulers.io())
+                .repeat(2)
+                .observeOn(AndroidSchedulers.mainThread());
 
-                    @Override
-                    public void onError(@NonNull Throwable e) {
+        taskObservable.subscribe(new Observer<Integer>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+                compositeDisposable.add(d);
+            }
 
-                    }
+            @Override
+            public void onNext(@NonNull Integer integer) {
+                Log.d(TAG, "onNext: " + integer);
+            }
 
-                    @Override
-                    public void onComplete() {
+            @Override
+            public void onError(@NonNull Throwable e) {
 
-                    }
-                });
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+
 
     }
 
@@ -91,40 +118,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         compositeDisposable.clear();
         compositeDisposable.dispose();
-    }
-
-    private Observable<Posts> getObservablePosts() {
-
-        return iApi.getPosts()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Function<List<Posts>, ObservableSource<Posts>>() {
-                    @Override
-                    public ObservableSource<Posts> apply(List<Posts> posts) throws Throwable {
-                        recyclerViewAdapter.setPosts(posts);
-                        return Observable.fromIterable(posts)
-                                .subscribeOn(Schedulers.io());
-                    }
-                });
 
     }
-
-    private Observable<Posts> getObservableComments(Posts posts) {
-
-        return iApi.getComments(posts.getId())
-                .map(new Function<List<Comments>, Posts>() {
-                    @Override
-                    public Posts apply(List<Comments> comments) throws Throwable {
-
-                        int delay = ((new Random()).nextInt(3) + 1) * 1000; // sleep thread for random ms
-                        Thread.sleep(delay);
-
-                        posts.setComments(comments);
-                        return posts;
-                    }
-                })
-                .observeOn(Schedulers.io());
-
-    }
-
 }
