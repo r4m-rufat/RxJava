@@ -4,14 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
     tools:context=".MainActivity">
 
-
-    <androidx.recyclerview.widget.RecyclerView
+    <androidx.appcompat.widget.SearchView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/recyclerView"/>
+        android:layout_height="?attr/actionBarSize"
+        android:layout_margin="10dp"
+        android:id="@+id/search_view"/>
 
 </LinearLayout>

@@ -51,4 +51,8 @@ dependencies {
     // RxJava Call Adapter
     implementation "com.github.akarnokd:rxjava3-retrofit-adapter:3.0.0"
 
+    // Rx binding
+    implementation 'com.jakewharton.rxbinding4:rxbinding:4.0.0'
+
+
 }
